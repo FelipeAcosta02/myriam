@@ -2,40 +2,70 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 
 export default class App extends Component {
-  state = { chemicalExpression: '', elementsComputed: [] };
+  state = { chemicalExpression: '', computedElements: [], units: '', grams: 0, mols: 0, molecules: 0 };
+  getBetweenParenthsis = (el) => el.match(/\(([^)]+)\)\d+(?!\.)|\(([^)]+)\)/gi);
+  getIndex = (el) => el.match(/\d+$/) ? Number(el.match(/\d+$/)) : 1;
+  getElem = (el) => el.match(/[A-Z][a-z]|[A-Z]/g).pop();
+  getElemsWithIndex = (el) => el.match(/[A-Z][a-z]\d+(?!\.)|[A-Z]\d+(?!\.)|[A-Z][a-z]|[A-Z]/g);
   calculateValues = (e) => {
     e.preventDefault();
-    let exp = this.state.chemicalExpression;
-    if (exp) {
-      let elementsComputed = {};
-      const getIndex = (el) => el.match(/\d+$/) ? Number(el.match(/\d+$/)) : 1;
-      const getElem = (el) => el.match(/[A-Z][a-z]|[A-Z]/g).pop();
-      const getElemsWithIndex = (el) => el.match(/[A-Z][a-z]\d+(?!\.)|[A-Z]\d+(?!\.)|[A-Z][a-z]|[A-Z]/g);
-      const getBetweenParenthsis = (el) => el.match(/\(([^)]+)\)\d+(?!\.)|\(([^)]+)\)/gi);
-      const moleculeBlocks = getBetweenParenthsis(exp) ? getBetweenParenthsis(exp) : [];
-      moleculeBlocks.forEach(mol => {
-        exp = exp.replace(mol, '');
-        getElemsWithIndex(mol).forEach(el => exp = exp + getElem(el) + getIndex(mol) * getIndex(el));
-      });
-      const elementsUsed = getElemsWithIndex(exp);
-      elementsUsed.forEach(el => elementsComputed[getElem(el)] = elementsComputed[getElem(el)] ?
-        elementsComputed[getElem(el)] + getIndex(el) : getIndex(el));
-      elementsComputed = Object.entries(elementsComputed).map(([key, value]) => (
-        {
-          key,
-          atoms: value,
-          MM: this.relativeAtomicMassOf[key] * value,
-          grams: this.relativeAtomicMassOf[key] * value * this.avogadro,
-          atomicMass: this.relativeAtomicMassOf[key]
-        }
-      ));
-      this.setState({ elementsComputed });
+    const { chemicalExpression: exp, units } = this.state;
+    if (exp && units.match(/[a-z]/g).length) {
+      let computedElements = this.computeExpression(exp);
+      this.setState({ computedElements });
+      let { grams, molecules, mols } = this.deriveUnits(units, computedElements);
+      this.setState({ grams, molecules, mols });
+      computedElements = this.addAtomicValues(molecules, mols, computedElements);
+      this.setState({ computedElements });
     } else {
-      alert('Your Chemical Expression Cannot Be Empty');
+      alert('Your Chemical Expression and Units Cannot Be Empty');
     }
   };
-  sumAllValues = (att) => {
-    const elems = this.state.elementsComputed
+  addAtomicValues = (molecules, mols, elems) => {
+    let computedElements = elems.map(({ units, MM, ...rest }) => ({
+      units,
+      atoms: units * molecules,
+      mols: units * mols,
+      grams: units * mols * MM,
+      MM,
+      ...rest
+    }));
+    return computedElements;
+  };
+  computeExpression = (exp) => {
+    let computedElements = {};
+    const moleculeBlocks = this.getBetweenParenthsis(exp) ? this.getBetweenParenthsis(exp) : [];
+    moleculeBlocks.forEach(mol => {
+      exp = exp.replace(mol, '');
+      this.getElemsWithIndex(mol).forEach(el => exp = exp + this.getElem(el) + this.getIndex(mol) * this.getIndex(el));
+    });
+    const elementsUsed = this.getElemsWithIndex(exp);
+    elementsUsed.forEach(el => computedElements[this.getElem(el)] = computedElements[this.getElem(el)] ?
+      computedElements[this.getElem(el)] + this.getIndex(el) : this.getIndex(el));
+    computedElements = Object.entries(computedElements).map(([key, value]) => ({
+      element: key,
+      units: value,
+      MM: this.relativeAtomicMassOf[key] * value,
+      atomicMass: this.relativeAtomicMassOf[key]
+    }));
+    return computedElements;
+  };
+  deriveUnits = (units, computedElements) => {
+    let unit = units[units.length - 1];
+    let value = units.slice(0, units.length - 1)
+    let grams, mols, molecules;
+    if (unit === 'm') {
+      mols = value;
+      grams = value * this.sumAllValues('MM', computedElements);
+    } else if (unit === 'g') {
+      grams = value;
+      mols = value / this.sumAllValues('MM', computedElements);
+    };
+    molecules = mols * this.avogadro;
+    return { grams, mols, molecules };
+  };
+  sumAllValues = (att, computedElements) => {
+    const elems = computedElements ? computedElements : this.state.computedElements;
     let value = 0;
     elems.forEach(el => value = value + el[att]);
     return (value);
@@ -159,46 +189,63 @@ export default class App extends Component {
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" height='80px' width='80px' />
           <h1>Put your Chemical Expression Below</h1>
-          <form action="Get Chmical Expression">
+          <form action="Get Chemical Expression">
+            <span>Expression:</span>
             <input
               placeholder='Tc(HPO3)2'
               type="text" value={this.state.chemicalExpression}
               onChange={e => this.setState({ chemicalExpression: e.target.value })}
             />
+            <span>Units:</span>
+            <input
+              placeholder='2.5m OR 3.2g'
+              type="text" value={this.state.units}
+              onChange={e => this.setState({ units: e.target.value })}
+            />
             <input type='submit' onClick={this.calculateValues} value='Compute Chemical Compound!' />
           </form>
           {
-            this.state.elementsComputed.length ?
+            this.state.computedElements.length ?
               <table style={{ width: '100%', marginTop: '20px' }}>
                 <thead>
                   <tr>
                     <th>Element</th>
-                    <th>Atoms</th>
+                    <th>Units</th>
                     <th>MM</th>
-                    <th>Total Grams</th>
+                    <th>Atoms</th>
                     <th>Rel. Atomic Mass</th>
+                    <th>Grams</th>
+                    <th>Mols</th>
+                    <th>Molecules</th>
                   </tr>
                 </thead>
                 <tbody>
                   {
-                    this.state.elementsComputed.map(({ key, atoms, MM, grams, atomicMass }, i) =>
-                      <tr key={i}>
-                        <td>{key}</td>
-                        <td>{atoms}</td>
-                        <td>{MM}</td>
-                        <td>{grams}</td>
-                        <td>{atomicMass}</td>
-                      </tr>
+                    this.state.computedElements.map(
+                      ({ element, units, atoms, MM, atomicMass, mols, grams }, i) =>
+                        <tr key={i}>
+                          <td>{element}</td>
+                          <td>{units}</td>
+                          <td>{MM.toFixed(4)}</td>
+                          <td>{atoms.toFixed(4)}</td>
+                          <td>{atomicMass.toFixed(4)}</td>
+                          <td>{grams.toFixed(4)}</td>
+                          <td>{mols.toFixed(4)}</td>
+                          <td>-</td>
+                        </tr>
                     )
                   }
                 </tbody>
                 <tfoot>
                   <tr>
                     <th>TOTAL</th>
-                    <td>{this.sumAllValues('atoms')}</td>
-                    <td>{this.sumAllValues('MM')}</td>
-                    <td>{this.sumAllValues('grams')}</td>
-                    <td>{this.sumAllValues('atomicMass')}</td>
+                    <td>{this.sumAllValues('units')}</td>
+                    <td>{this.sumAllValues('MM').toFixed(4)}</td>
+                    <td>{this.sumAllValues('atoms').toFixed(4)}</td>
+                    <td>-</td>
+                    <td>{this.state.grams.toFixed(4)}</td>
+                    <td>{Number(this.state.mols).toFixed(4)}</td>
+                    <td>{this.state.molecules.toFixed(4)}</td>
                   </tr>
                 </tfoot>
               </table>

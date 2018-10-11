@@ -1,7 +1,7 @@
 {
   "name": "myriam-app",
   "version": "0.1.0",
-  "homepage": "FelipeAcosta02.github.io/myriam",
+  "homepage": "http://FelipeAcosta02.github.io/myriam",
   "private": true,
   "dependencies": {
     "react": "^16.5.2",

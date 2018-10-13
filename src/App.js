@@ -243,7 +243,7 @@ export default class App extends Component {
                     <td>{this.sumAllValues('MM').toFixed(4)}</td>
                     <td>{this.sumAllValues('atoms').toFixed(4)}</td>
                     <td>-</td>
-                    <td>{this.state.grams.toFixed(4)}</td>
+                    <td>{Number(this.state.grams).toFixed(4)}</td>
                     <td>{Number(this.state.mols).toFixed(4)}</td>
                     <td>{this.state.molecules.toFixed(4)}</td>
                   </tr>

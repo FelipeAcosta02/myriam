@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.2/workbox-sw.js");
 
 importScripts(
-  "/myriam/precache-manifest.7e2284d04780cc2db735944d0dcd94ce.js"
+  "/myriam/precache-manifest.8b98513e32975dbd3bb76e9082f3c5bc.js"
 );
 
 workbox.clientsClaim();

@@ -1,7 +1,7 @@
 {
   "main.css": "/myriam/static/css/main.f5633d69.chunk.css",
-  "main.js": "/myriam/static/js/main.d971f661.chunk.js",
-  "main.js.map": "/myriam/static/js/main.d971f661.chunk.js.map",
+  "main.js": "/myriam/static/js/main.7fabb38c.chunk.js",
+  "main.js.map": "/myriam/static/js/main.7fabb38c.chunk.js.map",
   "static/js/1.9ba59c28.chunk.js": "/myriam/static/js/1.9ba59c28.chunk.js",
   "static/js/1.9ba59c28.chunk.js.map": "/myriam/static/js/1.9ba59c28.chunk.js.map",
   "runtime~main.js": "/myriam/static/js/runtime~main.d26e975f.js",
@@ -9,6 +9,6 @@
   "static/media/logo.svg": "/myriam/static/media/logo.5d5d9eef.svg",
   "static/css/main.f5633d69.chunk.css.map": "/myriam/static/css/main.f5633d69.chunk.css.map",
   "index.html": "/myriam/index.html",
-  "precache-manifest.7e2284d04780cc2db735944d0dcd94ce.js": "/myriam/precache-manifest.7e2284d04780cc2db735944d0dcd94ce.js",
+  "precache-manifest.8b98513e32975dbd3bb76e9082f3c5bc.js": "/myriam/precache-manifest.8b98513e32975dbd3bb76e9082f3c5bc.js",
   "service-worker.js": "/myriam/service-worker.js"
 }
